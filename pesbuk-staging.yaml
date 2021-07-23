@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: staging
+  name: p-secret-fb-staging
+type: Opaque
+data:
+  DB_USER: YWRtaW4=
+  DB_PASS: YWRtaW4tY2lsc3k=
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: staging
+  name: p-fb-configmap-secret-staging
+data:
+  config.php: |
+    <?php
+    $db_host = "database-wordpress.cmaic43kllui.ap-southeast-1.rds.amazonaws.com";
+    $db_user = getenv("DB_USER");
+    $db_pass = getenv("DB_PASS");
+    $db_name = "dbsosmed_staging";
+    try {    
+      //create PDO connection
+      $db = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
+    } catch(PDOException $e) {
+      //show error
+      die("Terjadi masalah: " . $e->getMessage());
+    }
+    ?>
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: staging
+  name: pesbuk-app-staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pesbuk-app-staging
+  template:
+    metadata:
+      labels:
+        app: pesbuk-app-staging
+    spec:
+      volumes:
+      - name: config-secret
+        configMap:
+          name: p-fb-configmap-secret-staging
+      containers:
+      - name: php-sosmed-staging
+        image: pesbuk-staging
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config-secret
+          mountPath: "/var/www/html/config.php"
+          subPath: "config.php"
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: p-secret-fb-staging
+              key: DB_USER
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: p-secret-fb-staging
+              key: DB_PASS
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: staging
+  name: pesbuk-service-staging    
+spec:
+  selector:
+    app: pesbuk-app-staging
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: staging
+  name: ingress-staging-pesbuk
+spec:
+  rules:
+  - host: pesbuk-staging.agylpradipta.xyz
+    http:
+      paths:
+        - backend:
+            serviceName: pesbuk-service-staging
+            servicePort: 80
