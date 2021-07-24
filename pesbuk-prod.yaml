@@ -96,7 +96,7 @@ metadata:
   name: ingress-production-pesbuk
 spec:
   rules:
-  - host: pesbuk-production.agylpradipta.xyz
+  - host: pesbuk.agylpradipta.xyz
     http:
       paths:
         - backend:
