@@ -11,7 +11,8 @@ node {
         git credentialsId: 'GIT_HUB_CREDENTIALS', url: 'https://github.com/agylpradipta/sosial-media.git'
     }
 
-    stage("Create Images Production"){
+    stage("Staging Deployment"){
+        
        sh 'sudo -u ubuntu -H sh -c "kubectl apply -f pesbuk-staging.yaml"'
     }
     
