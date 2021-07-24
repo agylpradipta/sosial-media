@@ -53,7 +53,7 @@ spec:
           name: p-fb-configmap-secret-production
       containers:
       - name: php-sosmed-production
-        image: starlord345/pesbuk:production
+        image: starlord345/pesbuk:latest
         ports:
         - containerPort: 80
         volumeMounts:
