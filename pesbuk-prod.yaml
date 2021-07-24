@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: production
+  name: p-secret-fb-production
+type: Opaque
+data:
+  DB_USER: YWRtaW4=
+  DB_PASS: YWRtaW4tY2lsc3k=
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: production
+  name: p-fb-configmap-secret-production
+data:
+  config.php: |
+    <?php
+    $db_host = "database-wordpress.cmaic43kllui.ap-southeast-1.rds.amazonaws.com";
+    $db_user = getenv("DB_USER");
+    $db_pass = getenv("DB_PASS");
+    $db_name = "dbsosmed";
+    try {    
+      //create PDO connection
+      $db = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
+    } catch(PDOException $e) {
+      //show error
+      die("Terjadi masalah: " . $e->getMessage());
+    }
+    ?>
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: production
+  name: pesbuk-app-production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pesbuk-app-production
+  template:
+    metadata:
+      labels:
+        app: pesbuk-app-production
+    spec:
+      volumes:
+      - name: config-secret
+        configMap:
+          name: p-fb-configmap-secret-production
+      containers:
+      - name: php-sosmed-production
+        image: starlord345/pesbuk-production:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config-secret
+          mountPath: "/var/www/html/config.php"
+          subPath: "config.php"
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: p-secret-fb-production
+              key: DB_USER
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: p-secret-fb-production
+              key: DB_PASS
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: production
+  name: pesbuk-service-production    
+spec:
+  selector:
+    app: pesbuk-app-production
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  namespace: production
+  name: ingress-production-pesbuk
+spec:
+  rules:
+  - host: pesbuk-production.agylpradipta.xyz
+    http:
+      paths:
+        - backend:
+            serviceName: pesbuk-service-production
+            servicePort: 80
