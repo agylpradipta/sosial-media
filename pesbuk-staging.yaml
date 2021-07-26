@@ -5,7 +5,7 @@ metadata:
   name: p-secret-fb-staging
 type: Opaque
 data:
-  DB_USER: YWRtaW4=
+  DB_USER: YWRtaW4K
   DB_PASS: YnVsYmFzYXVyCg==
 
 ---
