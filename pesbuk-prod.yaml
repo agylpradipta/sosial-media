@@ -6,7 +6,7 @@ metadata:
 type: Opaque
 data:
   DB_USER: YWRtaW4=
-  DB_PASS: YWRtaW4tY2lsc3k=
+  DB_PASS: YnVsYmFzYXVyCg==
 
 ---
 
@@ -18,7 +18,7 @@ metadata:
 data:
   config.php: |
     <?php
-    $db_host = "database-wordpress.cmaic43kllui.ap-southeast-1.rds.amazonaws.com";
+    $db_host = "dbcilsy.cxojuezb7cuy.ap-southeast-1.rds.amazonaws.com";
     $db_user = getenv("DB_USER");
     $db_pass = getenv("DB_PASS");
     $db_name = "dbsosmed";
